@@ -2,8 +2,43 @@ import os
 import shutil
 import streamlit as st
 import time
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+import mimetypes
+from PIL import Image
 
 CAPTURE_FOLDER = "files"
+
+# loading all the environment variables
+load_dotenv() 
+
+client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+
+MODEL_ID = "gemini-2.0-flash" 
+
+def generate_response(client, model_id, contents):
+    response = client.models.generate_content(
+    model=model_id,
+    contents=contents
+    )
+    return response
+
+
+
+def detect_file_type(file_path):
+    # Detect MIME type
+    mime_type, _ = mimetypes.guess_type(file_path)
+    
+    # Check if the file is an image
+    image_types = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp']
+    if mime_type in image_types:
+        return 'image'
+    
+    # Check if the file is a PDF
+    if mime_type == 'application/pdf':
+        return 'pdf'
+
 
 def remove_files_in_folder(folder_path):
     """Helper function to remove all contents of a folder path given by parameter `folder_path`"""
@@ -33,12 +68,10 @@ def main():
         if submit_button:
             with st.spinner("Processing..."):
                 start_time = time.time()
-                # model = load_model()
-                # output = model(text_input, max_length=512)
-                output = "OUTPUT GENERATED"
+                output = generate_response(client, MODEL_ID, text_input)
                 end_time = time.time()
                 st.write("Output:")
-                st.write(f"{text_input}-{output}")
+                st.write(f"{output.text}")
                 st.write(f"Time taken: {end_time - start_time} seconds")
 
     elif chat_type == "File":
@@ -61,25 +94,36 @@ def main():
                 uploaded_file_path = os.path.join(CAPTURE_FOLDER, file_uploader.name)
                 with open(uploaded_file_path, "wb") as f:
                     f.write(file_uploader.getbuffer())
-                uploaded_file = uploaded_file_path
+                
 
                 st.success("File uploaded successfully!")
                 file_uploaded = True
 
 
         if file_uploaded:
+
+            # Check what is the type of file and load appropriately.
+            file_type = detect_file_type(uploaded_file_path)
+
+            if file_type == "image" : 
+                
+                image = Image.open(uploaded_file_path)
+                image.thumbnail([512,512])
+                st.image(image, caption="Uploaded Image.", use_column_width=True)
+
+
                 # Text input for question
-                question_input = st.text_area("Enter your question about the file")
+                question_input = st.text_area("Enter your question about the image")
                 ask_button = st.button("Ask")
 
                 if ask_button:
                     with st.spinner("Processing..."):
                         start_time = time.time()
-                        output = "OUTPUT GENERATED"
+                        output = generate_response(client, MODEL_ID, [question_input,image])
 
                         end_time = time.time()
                         st.write("Output:")
-                        st.write(f"{question_input}-{output}")
+                        st.write(f"{output.text}")
                         st.write(f"Time taken: {end_time - start_time} seconds")
 
 if __name__ == "__main__":

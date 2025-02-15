@@ -17,6 +17,10 @@ We require 3 libraries to run this project
 - `google-genai` : For using Google's LLMs (Like Google Pro, Google Flash models)
 - `python-dotenv` : Used to load `.env` files
 
+- You will have to create a `.env` file in the root of your repo and include the following
+
+`GOOGLE_API_KEY = <YOUR_API_KEY>`
+
 ## Executing the project
 
 - After installing the required packages, run `pdm run streamlit run app.py` to run the streamlit app.

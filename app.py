@@ -3,6 +3,8 @@ import shutil
 import streamlit as st
 import time
 
+CAPTURE_FOLDER = "files"
+
 def remove_files_in_folder(folder_path):
     """Helper function to remove all contents of a folder path given by parameter `folder_path`"""
     if os.path.exists(folder_path):
@@ -15,7 +17,7 @@ def remove_files_in_folder(folder_path):
                     shutil.rmtree(file_path)
             except Exception as e:
                 print(f"Failed to delete {file_path}. Reason: {e}")
-                
+
 
 def main():
     st.title("Chat with LLM")
@@ -46,17 +48,17 @@ def main():
         uploaded_file = None
         
         if file_uploader:
-            remove_files_in_folder("files")
+            remove_files_in_folder(CAPTURE_FOLDER)
 
             with st.spinner("Uploading file..."):
                 time.sleep(1)  # Simulate file upload time
                 
                 # Create a directory to store the uploaded file
-                if not os.path.exists("files"):
-                    os.makedirs("files")
+                if not os.path.exists(CAPTURE_FOLDER):
+                    os.makedirs(CAPTURE_FOLDER)
                 
                 # Save the uploaded file
-                uploaded_file_path = os.path.join("files", file_uploader.name)
+                uploaded_file_path = os.path.join(CAPTURE_FOLDER, file_uploader.name)
                 with open(uploaded_file_path, "wb") as f:
                     f.write(file_uploader.getbuffer())
                 uploaded_file = uploaded_file_path

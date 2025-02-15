@@ -11,11 +11,11 @@ from PIL import Image
 CAPTURE_FOLDER = "files"
 
 # loading all the environment variables
-load_dotenv() 
+load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
-MODEL_ID = "gemini-2.0-flash" 
+MODEL_ID = "gemini-2.0-flash"
 
 def generate_response(client, model_id, contents):
     response = client.models.generate_content(
@@ -29,12 +29,12 @@ def generate_response(client, model_id, contents):
 def detect_file_type(file_path):
     # Detect MIME type
     mime_type, _ = mimetypes.guess_type(file_path)
-    
+
     # Check if the file is an image
     image_types = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp']
     if mime_type in image_types:
         return 'image'
-    
+
     # Check if the file is a PDF
     if mime_type == 'application/pdf':
         return 'pdf'
@@ -94,7 +94,7 @@ def main():
                 uploaded_file_path = os.path.join(CAPTURE_FOLDER, file_uploader.name)
                 with open(uploaded_file_path, "wb") as f:
                     f.write(file_uploader.getbuffer())
-                
+
 
                 st.success("File uploaded successfully!")
                 file_uploaded = True
@@ -105,8 +105,8 @@ def main():
             # Check what is the type of file and load appropriately.
             file_type = detect_file_type(uploaded_file_path)
 
-            if file_type == "image" : 
-                
+            if file_type == "image" :
+
                 image = Image.open(uploaded_file_path)
                 image.thumbnail([512,512])
                 st.image(image, caption="Uploaded Image.", use_container_width=True)

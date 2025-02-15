@@ -23,4 +23,6 @@ We require 3 libraries to run this project
 
 ## Executing the project
 
-- After installing the required packages, run `pdm run streamlit run app.py` to run the streamlit app.
+- After installing the required packages, run `pdm run streamlit run app.py` to run the streamlit app without storing any conversation history
+
+- Run `pdm run streamlit run app_with_history.py` to run the streamlit app with conversation history.

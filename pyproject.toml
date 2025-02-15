@@ -5,7 +5,7 @@ description = "Application on Streamlit to chat with any Text, Image and Video I
 authors = [
     {name = "Abinav Ramesh", email = "abinavrameshs@gmail.com"},
 ]
-dependencies = ["streamlit>=1.42.0", "google-genai>=1.2.0", "python-dotenv>=1.0.1"]
+dependencies = ["streamlit>=1.42.0", "google-genai>=1.2.0", "python-dotenv>=1.0.1", "httpx>=0.28.1"]
 requires-python = ">=3.10"
 readme = "README.md"
 license = {text = "GNU"}

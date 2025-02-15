@@ -1,4 +1,5 @@
 import os
+import pathlib
 import shutil
 import streamlit as st
 import time
@@ -8,40 +9,101 @@ from google.genai import types
 import mimetypes
 from PIL import Image
 
+MODEL_ID = "gemini-2.0-flash"
 CAPTURE_FOLDER = "files"
+IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]
+DOCUMENT_MIME_TYPES = [
+    "application/pdf",
+    "application/x-javascript",
+    "text/javascript",
+    "application/x-python",
+    "text/x-python",
+    "text/plain" "text/css",
+    "text/md",
+    "text/csv",
+    "text/xml",
+    "text/rtf",
+]
+
+AUDIO_MIME_TYPES = [
+    "audio/wav",
+    "audio/mp3",
+    "audio/aiff",
+    "audio/acc",
+    "audio/ogg",
+    "audio/flac",
+]
 
 # loading all the environment variables
 load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
-MODEL_ID = "gemini-2.0-flash"
 
-def generate_response(client, model_id, contents):
-    response = client.models.generate_content(
-    model=model_id,
-    contents=contents
-    )
+def generate_response(client: genai.Client, model_id: str, contents):
+    response = client.models.generate_content(model=model_id, contents=contents)
     return response
 
 
+def detect_mime_type(file_path: str) -> str:
+    """
+    Detects the MIME type of a file.
 
-def detect_file_type(file_path):
-    # Detect MIME type
+    This function uses the `mimetypes` module to guess the MIME type
+    of a file based on its file extension.
+
+    Args:
+        file_path (str): The path to the file.
+
+    Returns:
+        str: The detected MIME type, or None if unknown.
+    """
     mime_type, _ = mimetypes.guess_type(file_path)
+    return mime_type
 
-    # Check if the file is an image
-    image_types = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp']
-    if mime_type in image_types:
-        return 'image'
 
-    # Check if the file is a PDF
-    if mime_type == 'application/pdf':
-        return 'pdf'
+def read_file(filepath: str) -> types.Part:
+    """
+    Reads a file and converts its contents into a `Part` object.
+
+    This helper function supports reading files of various MIME types,
+    including documents, images, and audio files. The file's contents
+    are read and wrapped in a `Part` object, which is required for
+    interacting with the Google API.
+
+    Args:
+        filepath (str): The path to the file to be read.
+
+    Returns:
+        types.Part: A `Part` object containing the file's contents.
+    """
+    data_bytes = types.Part.from_bytes(
+        data=pathlib.Path(filepath).read_bytes(),
+        mime_type=detect_mime_type(filepath),
+    )
+    return data_bytes
+
+
+def read_image(filepath: str):
+    image = Image.open(filepath)
+    image.thumbnail([512, 512])
+    return image
 
 
 def remove_files_in_folder(folder_path):
-    """Helper function to remove all contents of a folder path given by parameter `folder_path`"""
+    """
+    Removes all contents of a folder.
+
+    This function deletes all files and subfolders within the specified
+    folder path. If the folder does not exist, no action is taken.
+
+    Args:
+        folder_path (str): The path to the folder to be cleared.
+
+    Raises:
+        Exception: If an error occurs while deleting a file or folder.
+
+    """
     if os.path.exists(folder_path):
         for filename in os.listdir(folder_path):
             file_path = os.path.join(folder_path, filename)
@@ -78,7 +140,6 @@ def main():
         # File uploader
         file_uploader = st.file_uploader("Upload a file")
         file_uploaded = False
-        uploaded_file = None
 
         if file_uploader:
             remove_files_in_folder(CAPTURE_FOLDER)
@@ -91,40 +152,53 @@ def main():
                     os.makedirs(CAPTURE_FOLDER)
 
                 # Save the uploaded file
-                uploaded_file_path = os.path.join(CAPTURE_FOLDER, file_uploader.name)
+                uploaded_file_path: str = os.path.join(
+                    CAPTURE_FOLDER, file_uploader.name
+                )
                 with open(uploaded_file_path, "wb") as f:
                     f.write(file_uploader.getbuffer())
-
 
                 st.success("File uploaded successfully!")
                 file_uploaded = True
 
-
         if file_uploaded:
+            # Check what is the mime_type of file and load appropriately.
+            mime_type = detect_mime_type(uploaded_file_path)
+            if (
+                mime_type
+                not in DOCUMENT_MIME_TYPES + AUDIO_MIME_TYPES + IMAGE_MIME_TYPES
+            ):
+                st.markdown(
+                    f"Unable to submit request because it has a mimeType parameter with value {mime_type}, which is not supported. Update the mimeType and try again."
+                )
+            else:
+                content = read_file(uploaded_file_path)
 
-            # Check what is the type of file and load appropriately.
-            file_type = detect_file_type(uploaded_file_path)
-
-            if file_type == "image" :
-
-                image = Image.open(uploaded_file_path)
-                image.thumbnail([512,512])
-                st.image(image, caption="Uploaded Image.", use_container_width=True)
-
+                if mime_type in IMAGE_MIME_TYPES:
+                    st.image(
+                        read_image(uploaded_file_path),
+                        caption="Uploaded Image.",
+                        use_container_width=True,
+                    )
 
                 # Text input for question
-                question_input = st.text_area("Enter your question about the image")
+                question_input = st.text_area(
+                    f"Enter your question about the {mime_type}"
+                )
                 ask_button = st.button("Ask")
 
                 if ask_button:
                     with st.spinner("Processing..."):
                         start_time = time.time()
-                        output = generate_response(client, MODEL_ID, [question_input,image])
+                        output = generate_response(
+                            client, MODEL_ID, [question_input, content]
+                        )
 
                         end_time = time.time()
                         st.write("Output:")
                         st.write(f"{output.text}")
                         st.write(f"Time taken: {end_time - start_time} seconds")
+
 
 if __name__ == "__main__":
     main()

@@ -109,7 +109,7 @@ def main():
                 
                 image = Image.open(uploaded_file_path)
                 image.thumbnail([512,512])
-                st.image(image, caption="Uploaded Image.", use_column_width=True)
+                st.image(image, caption="Uploaded Image.", use_container_width=True)
 
 
                 # Text input for question

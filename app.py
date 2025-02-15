@@ -21,15 +21,15 @@ def remove_files_in_folder(folder_path):
 
 def main():
     st.title("Chat with LLM")
-    
+
     # Initial dropdown
     chat_type = st.selectbox("What would you like to chat with?", ["Text", "File"])
-    
+
     if chat_type == "Text":
         # Text input and submit button
         text_input = st.text_area("Enter your text")
         submit_button = st.button("Submit")
-        
+
         if submit_button:
             with st.spinner("Processing..."):
                 start_time = time.time()
@@ -40,43 +40,43 @@ def main():
                 st.write("Output:")
                 st.write(f"{text_input}-{output}")
                 st.write(f"Time taken: {end_time - start_time} seconds")
-                
+
     elif chat_type == "File":
         # File uploader
         file_uploader = st.file_uploader("Upload a file")
         file_uploaded = False
         uploaded_file = None
-        
+
         if file_uploader:
             remove_files_in_folder(CAPTURE_FOLDER)
 
             with st.spinner("Uploading file..."):
                 time.sleep(1)  # Simulate file upload time
-                
+
                 # Create a directory to store the uploaded file
                 if not os.path.exists(CAPTURE_FOLDER):
                     os.makedirs(CAPTURE_FOLDER)
-                
+
                 # Save the uploaded file
                 uploaded_file_path = os.path.join(CAPTURE_FOLDER, file_uploader.name)
                 with open(uploaded_file_path, "wb") as f:
                     f.write(file_uploader.getbuffer())
                 uploaded_file = uploaded_file_path
-                
+
                 st.success("File uploaded successfully!")
                 file_uploaded = True
 
-        
+
         if file_uploaded:
                 # Text input for question
                 question_input = st.text_area("Enter your question about the file")
                 ask_button = st.button("Ask")
-                
+
                 if ask_button:
                     with st.spinner("Processing..."):
                         start_time = time.time()
                         output = "OUTPUT GENERATED"
-                        
+
                         end_time = time.time()
                         st.write("Output:")
                         st.write(f"{question_input}-{output}")
@@ -84,4 +84,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

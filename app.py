@@ -3,11 +3,15 @@ import pathlib
 import shutil
 import streamlit as st
 import time
+import logging
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 import mimetypes
 from PIL import Image
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 MODEL_ID = "gemini-2.0-flash"
 CAPTURE_FOLDER = "files"
@@ -18,7 +22,8 @@ DOCUMENT_MIME_TYPES = [
     "text/javascript",
     "application/x-python",
     "text/x-python",
-    "text/plain" "text/css",
+    "text/plain",
+    "text/css",
     "text/md",
     "text/csv",
     "text/xml",
@@ -29,20 +34,29 @@ AUDIO_MIME_TYPES = [
     "audio/wav",
     "audio/mp3",
     "audio/aiff",
-    "audio/acc",
+    "audio/aac",
     "audio/ogg",
     "audio/flac",
 ]
 
-# loading all the environment variables
+# Load all the environment variables
 load_dotenv()
 
-client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+# Ensure the API key is set
+api_key = os.getenv("GOOGLE_API_KEY")
+if not api_key:
+    raise ValueError("GOOGLE_API_KEY environment variable not set")
+
+client = genai.Client(api_key=api_key)
 
 
 def generate_response(client: genai.Client, model_id: str, contents):
-    response = client.models.generate_content(model=model_id, contents=contents)
-    return response
+    try:
+        response = client.models.generate_content(model=model_id, contents=contents)
+        return response
+    except Exception as e:
+        logging.error(f"Error generating response: {e}")
+        return None
 
 
 def detect_mime_type(file_path: str) -> str:
@@ -77,17 +91,25 @@ def read_file(filepath: str) -> types.Part:
     Returns:
         types.Part: A `Part` object containing the file's contents.
     """
-    data_bytes = types.Part.from_bytes(
-        data=pathlib.Path(filepath).read_bytes(),
-        mime_type=detect_mime_type(filepath),
-    )
-    return data_bytes
+    try:
+        data_bytes = types.Part.from_bytes(
+            data=pathlib.Path(filepath).read_bytes(),
+            mime_type=detect_mime_type(filepath),
+        )
+        return data_bytes
+    except Exception as e:
+        logging.error(f"Error reading file {filepath}: {e}")
+        return None
 
 
 def read_image(filepath: str):
-    image = Image.open(filepath)
-    image.thumbnail([512, 512])
-    return image
+    try:
+        image = Image.open(filepath)
+        image.thumbnail([512, 512])
+        return image
+    except Exception as e:
+        logging.error(f"Error reading image {filepath}: {e}")
+        return None
 
 
 def remove_files_in_folder(folder_path):
@@ -113,7 +135,7 @@ def remove_files_in_folder(folder_path):
                 elif os.path.isdir(file_path):
                     shutil.rmtree(file_path)
             except Exception as e:
-                print(f"Failed to delete {file_path}. Reason: {e}")
+                logging.error(f"Failed to delete {file_path}. Reason: {e}")
 
 
 def main():
@@ -132,9 +154,12 @@ def main():
                 start_time = time.time()
                 output = generate_response(client, MODEL_ID, text_input)
                 end_time = time.time()
-                st.write("Output:")
-                st.write(f"{output.text}")
-                st.write(f"Time taken: {end_time - start_time} seconds")
+                if output:
+                    st.write("Output:")
+                    st.write(f"{output.text}")
+                    st.write(f"Time taken: {end_time - start_time} seconds")
+                else:
+                    st.error("Failed to generate response")
 
     elif chat_type == "File":
         # File uploader
@@ -155,11 +180,14 @@ def main():
                 uploaded_file_path: str = os.path.join(
                     CAPTURE_FOLDER, file_uploader.name
                 )
-                with open(uploaded_file_path, "wb") as f:
-                    f.write(file_uploader.getbuffer())
-
-                st.success("File uploaded successfully!")
-                file_uploaded = True
+                try:
+                    with open(uploaded_file_path, "wb") as f:
+                        f.write(file_uploader.getbuffer())
+                    st.success("File uploaded successfully!")
+                    file_uploaded = True
+                except Exception as e:
+                    st.error(f"Failed to upload file: {e}")
+                    logging.error(f"Failed to upload file: {e}")
 
         if file_uploaded:
             # Check what is the mime_type of file and load appropriately.
@@ -195,9 +223,12 @@ def main():
                         )
 
                         end_time = time.time()
-                        st.write("Output:")
-                        st.write(f"{output.text}")
-                        st.write(f"Time taken: {end_time - start_time} seconds")
+                        if output:
+                            st.write("Output:")
+                            st.write(f"{output.text}")
+                            st.write(f"Time taken: {end_time - start_time} seconds")
+                        else:
+                            st.error("Failed to generate response")
 
 
 if __name__ == "__main__":

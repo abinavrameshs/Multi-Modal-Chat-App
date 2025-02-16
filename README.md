@@ -1,35 +1,38 @@
 # Multi-Modal-Chat-App
 
-This application, built with Streamlit, allows users to chat with any text, image, audio, or document inputs using Google's Large Language Models (LLMs). The application supports various file formats and provides an interactive interface for users to upload files or enter text and receive responses from the LLM.
+Application on Streamlit to chat with any Text, Image, Audio, Document Inputs.
+The following formats are supported by this application:
 
-## Supported Formats
+*Document formats:*
 
-### Document Formats:
-- PDF (`application/pdf`)
-- JavaScript (`application/x-javascript`, `text/javascript`)
-- Python (`application/x-python`, `text/x-python`)
-- TXT (`text/plain`)
-- HTML (`text/html`)
-- CSS (`text/css`)
-- Markdown (`text/md`)
-- CSV (`text/csv`)
-- XML (`text/xml`)
-- RTF (`text/rtf`)
+- PDF - application/pdf
+- JavaScript - application/x-javascript, text/javascript
+- Python - application/x-python, text/x-python
+- TXT - text/plain
+- HTML - text/html
+- CSS - text/css
+- Markdown - text/md
+- CSV - text/csv
+- XML - text/xml
+- RTF - text/rtf
 
-### Image Formats:
-- PNG (`image/png`)
-- JPEG (`image/jpeg`)
-- WEBP (`image/webp`)
-- HEIC (`image/heic`)
-- HEIF (`image/heif`)
 
-### Audio Formats:
-- WAV (`audio/wav`)
-- MP3 (`audio/mp3`)
-- AIFF (`audio/aiff`)
-- AAC (`audio/aac`)
-- OGG Vorbis (`audio/ogg`)
-- FLAC (`audio/flac`)
+*Images:*
+
+- PNG - image/png
+- JPEG - image/jpeg
+- WEBP - image/webp
+- HEIC - image/heic
+- HEIF - image/heif
+
+*Audio:*
+
+- WAV - audio/wav
+- MP3 - audio/mp3
+- AIFF - audio/aiff
+- AAC - audio/aac
+- OGG Vorbis - audio/ogg
+- FLAC - audio/flac
 
 ## Setup
 

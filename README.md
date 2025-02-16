@@ -1,6 +1,7 @@
 # Multi-Modal-Chat-App
 
 Application on Streamlit to chat with any Text, Image, Audio, Document Inputs. 
+
 *NOTE:* Here we can chat with only 1 document at a time
 
 The following formats are supported by this application:

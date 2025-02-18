@@ -1,4 +1,4 @@
-# Multi-Modal-Chat-App
+# DocTalk : Multi-Modal-Chat-App
 
 Application on Streamlit to chat with any Text, Image, Audio, Document Inputs.
 The following formats are supported by this application:
